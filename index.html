@@ -175,7 +175,8 @@ async function afterLogin(session){
 /* ---------- SHELL + ROUTER ---------- */
 const NAV=[
   {g:null,items:[['#/panel','Panel general',null]]},
-  {g:'Prospección',items:[['#/leads','Leads',['setter']],['#/nuevo','Nuevo lead',['setter']],['#/triage','Triage',['closer']],['#/reporte','Reporte de llamadas',['closer']],['#/grilla','Grilla de reportes',['closer','setter']]]},
+  {g:'Setter',items:[['#/leads','Leads',['setter']],['#/nuevo','Nuevo lead',['setter']]]},
+  {g:'Closer',items:[['#/triage','Triage',['closer']],['#/reporte','Reporte de llamadas',['closer']],['#/grilla','Grilla de reportes',['closer','setter']]]},
   {g:'Ventas',items:[['#/ventas','Ventas',null]]},
   {g:'Marketing',items:[['#/marketing','Rendimiento de marketing',null]]},
   {g:'Cobros',items:[['#/cobros','Cobros',null],['#/comisiones','Comisiones',null]]},
