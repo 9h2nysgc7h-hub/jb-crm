@@ -174,8 +174,8 @@ async function afterLogin(session){
 
 /* ---------- SHELL + ROUTER ---------- */
 const NAV=[
-  {g:null,items:[['#/panel','Panel general',null]]},
-  {g:'Setter',items:[['#/leads','Leads',['setter']],['#/nuevo','Nuevo lead',['setter']]]},
+  {g:null,items:[['#/panel','Panel general',null],['#/guia','Guía',null]]},
+  {g:'Setter',items:[['#/leads','Leads',['setter']],['#/nuevo','Nuevo lead',['setter']],['#/kpis','KPIs diarios',['setter']]]},
   {g:'Closer',items:[['#/triage','Triage',null],['#/reporte','Reporte de llamadas',null],['#/grilla','Grilla de reportes',null]]},
   {g:'Ventas',items:[['#/ventas','Ventas',null]]},
   {g:'Marketing',items:[['#/marketing','Rendimiento de marketing',null]]},
@@ -194,7 +194,7 @@ function renderShell(){
   document.getElementById('so').onclick=()=>sb.auth.signOut();window.onhashchange=route}
 function setActive(){root.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.h===location.hash))}
 function route(){setActive();const h=location.hash
-  const map={'#/panel':renderPanel,'#/leads':renderLeads,'#/nuevo':()=>openLeadModal(),'#/triage':renderTriage,'#/reporte':renderReporte,'#/grilla':renderGrilla,'#/ventas':renderVentas,'#/marketing':renderMarketing,'#/cobros':renderCobros,'#/comisiones':renderComisiones,'#/equipo':renderEquipo}
+  const map={'#/panel':renderPanel,'#/guia':renderGuia,'#/leads':renderLeads,'#/nuevo':()=>openLeadModal(),'#/kpis':renderKpis,'#/triage':renderTriage,'#/reporte':renderReporte,'#/grilla':renderGrilla,'#/ventas':renderVentas,'#/marketing':renderMarketing,'#/cobros':renderCobros,'#/comisiones':renderComisiones,'#/equipo':renderEquipo}
   ;(map[h]||renderPanel)()}
 
 /* ================= PANEL GENERAL ================= */
@@ -268,6 +268,22 @@ async function openLeadModal(lead){const ov=document.createElement('div');ov.cla
     if(res.error){toast('Error: '+res.error.message);return}
     toast('Guardado ✓');ov.remove();if(location.hash==='#/leads')renderLeads();else location.hash='#/leads'}
   if(lead)g('m_del').onclick=async()=>{if(confirm('¿Eliminar este lead?')){const r=await delRow('leads',lead.id);if(!r.ok){toast(r.msg);return}toast('Eliminado');ov.remove();if(location.hash==='#/leads')renderLeads()}}}
+
+/* ================= KPIS DIARIOS ================= */
+async function renderKpis(){const today=new Date().toISOString().slice(0,10)
+  view().innerHTML=head('SETTER','KPIs diarios')+`<div class="card"><h3>Cargar KPI del día</h3><p class="cdesc">Se actualiza cada vez que guardás — podés volver a cargar durante el día.</p>
+    <div class="field"><label>Fecha</label><input class="inp" id="k_fecha" type="date" value="${today}"/></div>
+    <div class="row2"><div class="field"><label>Leads contactados</label><input class="inp" id="k_cont" type="number" value="0"/></div><div class="field"><label>Agendas</label><input class="inp" id="k_ag" type="number" value="0"/></div></div>
+    <div class="field"><label>¿Cómo te sentiste el día de hoy?</label><input class="inp" id="k_notas"/></div>
+    <div class="actions"><div class="grow"></div><button class="btn primary" id="k_save">Guardar KPIs del día</button></div></div>
+    <div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Setter</th><th>Contactados</th><th>Agendas</th><th>Notas</th></tr></thead><tbody id="khist"><tr><td colspan="5" class="empty">Cargando…</td></tr></tbody></table></div>`
+  document.getElementById('k_save').onclick=async()=>{const g=id=>document.getElementById(id)
+    const p={setter_id:me.id,fecha:g('k_fecha').value,leads_contactados:+g('k_cont').value,agendas:+g('k_ag').value,notas:g('k_notas').value.trim()}
+    const{error}=await sb.from('kpis_diarios').upsert(p,{onConflict:'setter_id,fecha'});if(error){toast('Error: '+error.message);return};toast('Guardado ✓');loadKhist()}
+  loadKhist()}
+async function loadKhist(){const el=document.getElementById('khist');if(!el)return
+  let q=sb.from('kpis_diarios').select('*').order('fecha',{ascending:false}).limit(60);if(!isMgr())q=q.eq('setter_id',me.id)
+  const{data}=await q;el.innerHTML=(data&&data.length)?data.map(k=>`<tr><td class="nm">${esc(k.fecha)}</td><td class="sub2">${esc(nameOf(k.setter_id)||'—')}</td><td>${k.leads_contactados||0}</td><td>${k.agendas||0}</td><td class="sub2">${esc(k.notas||'—')}</td></tr>`).join(''):`<tr><td colspan="5" class="empty">Sin registros todavía.</td></tr>`}
 
 /* ================= TRIAGE ================= */
 async function renderTriage(){view().innerHTML=head('CLOSER','Triage')+`<div class="card"><h3>Leads para calificar</h3><p class="cdesc">Leads contactados o agendados, listos para trabajar.</p><div id="tr"></div></div>`
@@ -495,6 +511,39 @@ async function renderEquipo(){const{data:profs}=await sb.from('profiles').select
   document.querySelectorAll('[data-save]').forEach(b=>b.onclick=async()=>{const tr=b.closest('tr'),rol=tr.querySelector('.rol').value,cs=Number(tr.querySelector('.cs').value||0),cc=Number(tr.querySelector('.cc').value||0),cd=Number(tr.querySelector('.cd').value||0)
     const{error}=await sb.from('profiles').update({rol,com_setter_pct:cs,com_closer_pct:cc,com_director_pct:cd}).eq('id',b.dataset.save);if(error){toast('Error: '+error.message);return}
     const s=state.setters.find(x=>x.id===b.dataset.save);if(s){s.rol=rol;s.com_setter_pct=cs;s.com_closer_pct=cc;s.com_director_pct=cd};toast('Guardado ✓')})}
+
+/* ================= GUÍA ================= */
+function renderGuia(){view().innerHTML=head('AYUDA','Guía de uso')+`
+  <div class="card"><h3>Arrancar</h3><p class="cdesc">Reglas generales para todos.</p>
+    <ul style="margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.8">
+      <li>El menú de la izquierda se filtra según tu rol — Setter ve Leads/KPIs, Closer ve Triage/Reporte/Grilla. Ventas, Marketing, Cobros y Comisiones los ve todo el equipo.</li>
+      <li>Cargá todo en el momento (lead, llamada, venta, cobro) — el CRM sirve solo si los datos están al día.</li>
+    </ul></div>
+  <div class="card"><h3>Setter — Leads y KPIs</h3>
+    <ul style="margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.8">
+      <li><b style="color:var(--ink)">Leads → + Nuevo lead</b>: cargá nombre, teléfono, fuente y temperatura (No respondido / Leve / Fluido / Potencial).</li>
+      <li>Sumá <b style="color:var(--ink)">Situación, Objetivos y Dolor</b> del lead — el closer lo va a ver en Triage antes de la llamada.</li>
+      <li><b style="color:var(--ink)">KPIs diarios</b>: cargá leads contactados, agendas, y cómo te sentiste — se puede recargar el mismo día las veces que haga falta.</li>
+    </ul></div>
+  <div class="card"><h3>Closer — Triage, Reporte y Grilla</h3>
+    <ul style="margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.8">
+      <li><b style="color:var(--ink)">Triage</b>: leads contactados/agendados listos para llamar, con el contexto que cargó el setter.</li>
+      <li><b style="color:var(--ink)">Reporte de llamadas</b>: elegí el lead, si se presentó, y el resultado. Si <b style="color:var(--ink)">Cerró</b>, completá el bloque Venta ahí mismo (ticket, forma de pago, cuotas, comprobante).</li>
+      <li><b style="color:var(--ink)">Grilla de reportes</b>: historial de todas las llamadas cargadas.</li>
+    </ul></div>
+  <div class="card"><h3>Ventas y Cobros</h3>
+    <ul style="margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.8">
+      <li><b style="color:var(--ink)">Ventas → + Cargar venta</b>: para ventas que no vinieron de un reporte de llamada. Elegí Setter y Closer para que la comisión se les cargue a cada uno.</li>
+      <li><b style="color:var(--ink)">Base comisionable</b>: si hay recargo por cuotas, poné el precio base ahí — el recargo no comisiona.</li>
+      <li><b style="color:var(--ink)">Cobros</b>: marcá cada cuota como cobrada cuando entra el pago.</li>
+    </ul></div>
+  <div class="card"><h3>Comisiones</h3>
+    <ul style="margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.8">
+      <li>Tocá el <b style="color:var(--ink)">nombre</b> de una persona en la tabla de Setters/Closers para ver el detalle: Ganado, Pagado y Pendiente.</li>
+      <li>Marcá <b style="color:var(--ink)">"pagar"</b> línea por línea, o cargá un <b style="color:var(--ink)">pago manual</b> (monto suelto) si le transferiste algo sin marcar ventas puntuales.</li>
+    </ul></div>
+  <div class="card"><h3>Marketing</h3><p class="cdesc">Cargá cada pieza de contenido con su tag, plataforma y resultados (chats, leads, calificados, ventas, generado) para ver qué está funcionando.</p></div>
+  <div class="card"><h3>Equipo (manager)</h3><p class="cdesc">Asigná el rol y el % de comisión de setter/closer/director de cada persona.</p></div>`}
 
 /* ================= BOOT ================= */
 if(!SUPABASE_URL||!SUPABASE_ANON_KEY){renderConfigNeeded()}
