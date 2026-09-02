@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JB CRM</title>
+<title>Incubadora de Empresarios</title>
 <style>
   :root{
     --bg:#0b0b12;--bg2:#12121d;--surface:#161623;--surface-2:#1c1c2c;
@@ -65,7 +65,7 @@
   /* shell */
   #app{display:flex;min-height:100vh}
   .side{width:230px;flex:0 0 auto;background:var(--surface);border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column}
-  .side .brand{display:flex;align-items:center;gap:10px;padding:0 8px 22px;font-weight:800;font-size:18px}
+  .side .brand{display:flex;align-items:center;gap:10px;padding:0 8px 22px;font-weight:800;font-size:14px;line-height:1.3}
   .side .brand .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink))}
   .nav{flex:1;display:flex;flex-direction:column;gap:2px}
   .nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:14px;cursor:pointer}
@@ -133,7 +133,7 @@ function head(sub,title,actions=''){return `<div class="top"><div><div class="su
 function renderConfigNeeded(){root.innerHTML=`<div class="login"><div class="box"><h1>Falta configurar Supabase</h1><p>Completá SUPABASE_URL y SUPABASE_ANON_KEY arriba del archivo (dentro del &lt;script&gt;).</p></div></div>`}
 function renderLogin(){
   root.innerHTML=`<div class="login"><div class="box">
-    <div class="brand"><div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--pink))"></div><b>JB CRM</b></div>
+    <div class="brand"><div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--pink))"></div><b>Incubadora de Empresarios</b></div>
     <h1 id="lg_title">Ingresá</h1><p id="lg_sub">Accedé con tu cuenta del equipo.</p>
     <div class="field"><label>Email</label><input class="inp" id="lg_email" type="email" placeholder="vos@jb.com"/></div>
     <div class="field"><label>Contraseña</label><input class="inp" id="lg_pass" type="password" placeholder="••••••••"/></div>
@@ -185,7 +185,7 @@ function renderShell(){
   const nav=NAV.map(s=>{const items=s.items.filter(([,,roles])=>canSee(roles));if(!items.length)return ''
     return `${s.g?`<div class="grp">${s.g}</div>`:''}${items.map(([h,l])=>`<a data-h="${h}"><span>${l}</span></a>`).join('')}`}).join('')
   root.innerHTML=`<div id="app"><aside class="side">
-    <div class="brand"><div class="dot"></div>JB CRM</div>
+    <div class="brand"><div class="dot"></div>Incubadora de Empresarios</div>
     <nav class="nav">${nav}</nav>
     <div class="me"><div class="av">${initials(myProfile.nombre)}</div><div><div class="nm">${esc(myProfile.nombre||me.email)}</div><div class="rl">${esc(myProfile.rol)}</div></div><button class="out" id="so" title="Salir">⎋</button></div>
     </aside><main class="main" id="view"></main></div>`
