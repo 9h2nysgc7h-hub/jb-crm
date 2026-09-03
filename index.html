@@ -273,17 +273,18 @@ async function openLeadModal(lead){const ov=document.createElement('div');ov.cla
 async function renderKpis(){const today=new Date().toISOString().slice(0,10)
   view().innerHTML=head('SETTER','KPIs diarios')+`<div class="card"><h3>Cargar KPI del día</h3><p class="cdesc">Se actualiza cada vez que guardás — podés volver a cargar durante el día.</p>
     <div class="field"><label>Fecha</label><input class="inp" id="k_fecha" type="date" value="${today}"/></div>
-    <div class="row2"><div class="field"><label>Leads contactados</label><input class="inp" id="k_cont" type="number" value="0"/></div><div class="field"><label>Agendas</label><input class="inp" id="k_ag" type="number" value="0"/></div></div>
-    <div class="field"><label>¿Cómo te sentiste el día de hoy?</label><input class="inp" id="k_notas"/></div>
+    <div class="row3"><div class="field"><label>Chats únicos</label><input class="inp" id="k_chats" type="number" value="0"/></div><div class="field"><label>Conversaciones</label><input class="inp" id="k_conv" type="number" value="0"/></div><div class="field"><label>VSL</label><input class="inp" id="k_vsl" type="number" value="0"/></div></div>
+    <div class="row3"><div class="field"><label>Calendarios</label><input class="inp" id="k_cal" type="number" value="0"/></div><div class="field"><label>Agendas</label><input class="inp" id="k_ag" type="number" value="0"/></div><div class="field"><label>Calificados</label><input class="inp" id="k_calif" type="number" value="0"/></div></div>
+    <div class="field"><label>Notas</label><input class="inp" id="k_notas"/></div>
     <div class="actions"><div class="grow"></div><button class="btn primary" id="k_save">Guardar KPIs del día</button></div></div>
-    <div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Setter</th><th>Contactados</th><th>Agendas</th><th>Notas</th></tr></thead><tbody id="khist"><tr><td colspan="5" class="empty">Cargando…</td></tr></tbody></table></div>`
+    <div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Setter</th><th>Chats</th><th>Conv.</th><th>VSL</th><th>Calendarios</th><th>Agendas</th><th>Calif.</th><th>Notas</th></tr></thead><tbody id="khist"><tr><td colspan="9" class="empty">Cargando…</td></tr></tbody></table></div>`
   document.getElementById('k_save').onclick=async()=>{const g=id=>document.getElementById(id)
-    const p={setter_id:me.id,fecha:g('k_fecha').value,leads_contactados:+g('k_cont').value,agendas:+g('k_ag').value,notas:g('k_notas').value.trim()}
+    const p={setter_id:me.id,fecha:g('k_fecha').value,chats_unicos:+g('k_chats').value,conversaciones:+g('k_conv').value,vsl:+g('k_vsl').value,calendarios:+g('k_cal').value,agendas:+g('k_ag').value,calificados:+g('k_calif').value,notas:g('k_notas').value.trim()}
     const{error}=await sb.from('kpis_diarios').upsert(p,{onConflict:'setter_id,fecha'});if(error){toast('Error: '+error.message);return};toast('Guardado ✓');loadKhist()}
   loadKhist()}
 async function loadKhist(){const el=document.getElementById('khist');if(!el)return
   let q=sb.from('kpis_diarios').select('*').order('fecha',{ascending:false}).limit(60);if(!isMgr())q=q.eq('setter_id',me.id)
-  const{data}=await q;el.innerHTML=(data&&data.length)?data.map(k=>`<tr><td class="nm">${esc(k.fecha)}</td><td class="sub2">${esc(nameOf(k.setter_id)||'—')}</td><td>${k.leads_contactados||0}</td><td>${k.agendas||0}</td><td class="sub2">${esc(k.notas||'—')}</td></tr>`).join(''):`<tr><td colspan="5" class="empty">Sin registros todavía.</td></tr>`}
+  const{data}=await q;el.innerHTML=(data&&data.length)?data.map(k=>`<tr><td class="nm">${esc(k.fecha)}</td><td class="sub2">${esc(nameOf(k.setter_id)||'—')}</td><td>${k.chats_unicos||0}</td><td>${k.conversaciones||0}</td><td>${k.vsl||0}</td><td>${k.calendarios||0}</td><td>${k.agendas||0}</td><td>${k.calificados||0}</td><td class="sub2">${esc(k.notas||'—')}</td></tr>`).join(''):`<tr><td colspan="9" class="empty">Sin registros todavía.</td></tr>`}
 
 /* ================= TRIAGE ================= */
 async function renderTriage(){view().innerHTML=head('CLOSER','Triage')+`<div class="card"><h3>Leads para calificar</h3><p class="cdesc">Leads contactados o agendados, listos para trabajar.</p><div id="tr"></div></div>`
@@ -523,7 +524,7 @@ function renderGuia(){view().innerHTML=head('AYUDA','Guía de uso')+`
     <ul style="margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.8">
       <li><b style="color:var(--ink)">Leads → + Nuevo lead</b>: cargá nombre, teléfono, fuente y temperatura (No respondido / Leve / Fluido / Potencial).</li>
       <li>Sumá <b style="color:var(--ink)">Situación, Objetivos y Dolor</b> del lead — el closer lo va a ver en Triage antes de la llamada.</li>
-      <li><b style="color:var(--ink)">KPIs diarios</b>: cargá leads contactados, agendas, y cómo te sentiste — se puede recargar el mismo día las veces que haga falta.</li>
+      <li><b style="color:var(--ink)">KPIs diarios</b>: cargá chats únicos, conversaciones, VSL, calendarios, agendas y calificados — se puede recargar el mismo día las veces que haga falta.</li>
     </ul></div>
   <div class="card"><h3>Closer — Triage, Reporte y Grilla</h3>
     <ul style="margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.8">
